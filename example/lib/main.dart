@@ -50,7 +50,6 @@ class TestPage extends StatelessWidget {
                   child: Text("Nothing Here"),
                 ),
               ),
-              canReverse: true,
               cardSpreadInDegrees: 5, // Change the Spread of Background Cards
               onSwipeLeft: (swipeAmount, index) {
                 print(

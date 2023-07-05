@@ -7,10 +7,12 @@ import 'package:swipe_deck/constants.dart';
 import 'package:swipe_deck/data_holder.dart';
 import 'package:provider/provider.dart';
 
+enum SwipeDirection { left, right, both }
+
 class SwipeDeck extends StatefulWidget {
   final List<Widget> widgets;
   final int startIndex;
-  final bool canReverse;
+  final SwipeDirection swipeDirection;
   final Widget emptyIndicator;
   final double aspectRatio, cardSpreadInDegrees;
   final Function(int)? onChange;
@@ -26,7 +28,7 @@ class SwipeDeck extends StatefulWidget {
     this.cardSpreadInDegrees = 5.0,
     this.onSwipeRight,
     this.onSwipeLeft,
-    this.canReverse = true,
+    this.swipeDirection = SwipeDirection.both,
   }) : super(key: key);
 
   @override
@@ -171,7 +173,10 @@ class _SwipeDeckState extends State<SwipeDeck> {
                 (centerWidth - panDetails.localPosition.dx).abs() / centerWidth;
             context.read<TransformData>().setTransformDelta(transformLevel);
             context.read<TransformData>().setLeftDrag(draggingLeft);
-            if (!widget.canReverse && draggingLeft) {
+            if (draggingLeft && widget.swipeDirection == SwipeDirection.right) {
+              return;
+            }
+            if (!draggingLeft && widget.swipeDirection == SwipeDirection.left) {
               return;
             }
 
