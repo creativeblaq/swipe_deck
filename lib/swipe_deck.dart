@@ -18,6 +18,8 @@ class SwipeDeck extends StatefulWidget {
   final Function(int)? onChange;
   final Function(double? swipeAmount, int index)? onSwipeRight, onSwipeLeft;
 
+  final bool loop;
+
   const SwipeDeck({
     Key? key,
     required this.widgets,
@@ -29,6 +31,7 @@ class SwipeDeck extends StatefulWidget {
     this.onSwipeRight,
     this.onSwipeLeft,
     this.swipeDirection = SwipeDirection.both,
+    this.loop = false,
   }) : super(key: key);
 
   @override
@@ -212,10 +215,16 @@ class _SwipeDeckState extends State<SwipeDeck> {
               removedImage = currentWidget;
               if (draggingLeft) {
                 if (rightStackRaw.isEmpty) {
+                  if (widget.loop) {
+                    rightStackRaw = leftStackRaw;
+                  }
                   return;
                 }
                 leftStackRaw.insert(0, currentWidget!);
                 currentWidget = rightStackRaw.last;
+                if (widget.loop) {
+                  rightStackRaw = [leftStackRaw.first, ...rightStackRaw];
+                }
                 rightStackRaw.removeLast();
 
                 changed = true;
@@ -228,6 +237,9 @@ class _SwipeDeckState extends State<SwipeDeck> {
                 }
                 rightStackRaw.add(currentWidget!);
                 currentWidget = leftStackRaw.first;
+                if (widget.loop) {
+                  leftStackRaw = [leftStackRaw.last, ...leftStackRaw];
+                }
                 leftStackRaw.removeAt(0);
 
                 changed = true;

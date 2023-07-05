@@ -51,6 +51,7 @@ class TestPage extends StatelessWidget {
                 ),
               ),
               swipeDirection: SwipeDirection.left,
+              loop: true,
               cardSpreadInDegrees: 5, // Change the Spread of Background Cards
               onSwipeLeft: (swipeAmount, index) {
                 print(
