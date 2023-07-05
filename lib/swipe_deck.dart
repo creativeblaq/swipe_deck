@@ -10,22 +10,24 @@ import 'package:provider/provider.dart';
 class SwipeDeck extends StatefulWidget {
   final List<Widget> widgets;
   final int startIndex;
+  final bool canReverse;
   final Widget emptyIndicator;
   final double aspectRatio, cardSpreadInDegrees;
   final Function(int)? onChange;
-  final Function? onSwipeRight, onSwipeLeft;
+  final Function(double? swipeAmount, int index)? onSwipeRight, onSwipeLeft;
 
-  const SwipeDeck(
-      {Key? key,
-      required this.widgets,
-      this.startIndex = 0,
-      this.emptyIndicator = const _NothingHere(),
-      this.aspectRatio = 4 / 3,
-      this.onChange,
-      this.cardSpreadInDegrees = 5.0,
-      this.onSwipeRight,
-      this.onSwipeLeft})
-      : super(key: key);
+  const SwipeDeck({
+    Key? key,
+    required this.widgets,
+    this.startIndex = 0,
+    this.emptyIndicator = const _NothingHere(),
+    this.aspectRatio = 4 / 3,
+    this.onChange,
+    this.cardSpreadInDegrees = 5.0,
+    this.onSwipeRight,
+    this.onSwipeLeft,
+    this.canReverse = true,
+  }) : super(key: key);
 
   @override
   _SwipeDeckState createState() => _SwipeDeckState();
@@ -37,7 +39,9 @@ class _SwipeDeckState extends State<SwipeDeck> {
   List<MapEntry<int, dynamic>> leftStack = [], rightStack = [];
   Widget? currentWidget, contestantImage, removedImage;
   bool draggingLeft = false, onHold = false, beginDrag = false;
-  double transformLevel = 0, removeTransformLevel = 0, spreadInRadians = DEFAULT_SPREAD;
+  double transformLevel = 0,
+      removeTransformLevel = 0,
+      spreadInRadians = DEFAULT_SPREAD;
   Timer? stackTimer, repositionTimer;
 
   @override
@@ -132,7 +136,8 @@ class _SwipeDeckState extends State<SwipeDeck> {
   Widget build(BuildContext context) {
     bool dragLimit = transformLevel > 0.8;
     return ChangeNotifierProvider(
-      create: (BuildContext context) => TransformData(spreadRadians: spreadInRadians),
+      create: (BuildContext context) =>
+          TransformData(spreadRadians: spreadInRadians),
       child: LayoutBuilder(builder: (context, constraints) {
         final imageWidth = constraints.maxWidth / 2;
         final imageHeight = widget.aspectRatio * imageWidth;
@@ -157,13 +162,27 @@ class _SwipeDeckState extends State<SwipeDeck> {
             }
             draggingLeft = (centerWidth) > panDetails.localPosition.dx;
 
-            if ((draggingLeft && rightStackRaw.isEmpty) || (!draggingLeft && leftStackRaw.isEmpty)) {
+            if ((draggingLeft && rightStackRaw.isEmpty) ||
+                (!draggingLeft && leftStackRaw.isEmpty)) {
               return;
             }
 
-            transformLevel = (centerWidth - panDetails.localPosition.dx).abs() / centerWidth;
+            transformLevel =
+                (centerWidth - panDetails.localPosition.dx).abs() / centerWidth;
             context.read<TransformData>().setTransformDelta(transformLevel);
             context.read<TransformData>().setLeftDrag(draggingLeft);
+            if (!widget.canReverse && draggingLeft) {
+              return;
+            }
+
+            if (draggingLeft && widget.onSwipeLeft != null) {
+              widget.onSwipeLeft!(-transformLevel, rightStackRaw.length);
+            } else {
+              if (widget.onSwipeRight != null) {
+                widget.onSwipeRight!(transformLevel, rightStackRaw.length);
+              }
+            }
+
             if (draggingLeft) {
               if (rightStack.isEmpty) {
                 return;
@@ -204,7 +223,6 @@ class _SwipeDeckState extends State<SwipeDeck> {
                 }
               }
               if (changed) {
-                draggingLeft ? widget.onSwipeLeft?.call() : widget.onSwipeRight?.call();
                 postOnChange(rightStackRaw.length);
               }
               refreshLHStacks();
@@ -234,35 +252,57 @@ class _SwipeDeckState extends State<SwipeDeck> {
                         ))
                     .toList(),
                 Transform.translate(
-                  offset: Offset(removeTransformLevel * (draggingLeft ? -90 : 90), 0),
+                  offset: Offset(
+                      removeTransformLevel * (draggingLeft ? -90 : 90), 0),
                   child: Transform(
                       alignment: Alignment.bottomCenter,
-                      transform: Matrix4.rotationZ(removeTransformLevel * (draggingLeft ? -0.5 : 0.5)),
-                      child: Container(width: imageWidth, height: imageHeight, child: removedImage ?? Center())),
+                      transform: Matrix4.rotationZ(
+                          removeTransformLevel * (draggingLeft ? -0.5 : 0.5)),
+                      child: Container(
+                          width: imageWidth,
+                          height: imageHeight,
+                          child: removedImage ?? Center())),
                 ),
                 if (!dragLimit) ...[
-                  Transform.scale(scale: 1.0 + min(transformLevel, 0.02), child: Container(width: imageWidth, height: imageHeight, child: contestantImage ?? Center())),
+                  Transform.scale(
+                      scale: 1.0 + min(transformLevel, 0.02),
+                      child: Container(
+                          width: imageWidth,
+                          height: imageHeight,
+                          child: contestantImage ?? Center())),
                 ],
                 if (currentWidget != null) ...[
                   Transform.translate(
-                    offset: Offset(transformLevel * (draggingLeft ? -90 : 90), 0),
+                    offset:
+                        Offset(transformLevel * (draggingLeft ? -90 : 90), 0),
                     child: Transform.scale(
                       scale: max(0.8, (1 - transformLevel + 0.2)),
                       alignment: Alignment.center,
                       child: Transform(
                           alignment: Alignment.bottomCenter,
-                          transform: Matrix4.rotationZ(transformLevel * (draggingLeft ? -0.5 : 0.5)),
+                          transform: Matrix4.rotationZ(
+                              transformLevel * (draggingLeft ? -0.5 : 0.5)),
                           child: Container(
                             width: imageWidth,
                             height: imageHeight,
-                            decoration: BoxDecoration(boxShadow: [BoxShadow(blurRadius: 10, spreadRadius: 1, color: Colors.black.withOpacity(0.2))], borderRadius: borderRadius),
+                            decoration: BoxDecoration(boxShadow: [
+                              BoxShadow(
+                                  blurRadius: 10,
+                                  spreadRadius: 1,
+                                  color: Colors.black.withOpacity(0.2))
+                            ], borderRadius: borderRadius),
                             child: currentWidget,
                           )),
                     ),
                   ),
                 ],
                 if (dragLimit) ...[
-                  Transform.scale(scale: 1.0 + min(transformLevel, 0.02), child: Container(width: imageWidth, height: imageHeight, child: contestantImage ?? Center())),
+                  Transform.scale(
+                      scale: 1.0 + min(transformLevel, 0.02),
+                      child: Container(
+                          width: imageWidth,
+                          height: imageHeight,
+                          child: contestantImage ?? Center())),
                 ]
               ],
             ),
@@ -280,7 +320,15 @@ class _WidgetHolder extends StatefulWidget {
   final bool isLeft;
   final int lastIndex;
 
-  const _WidgetHolder({Key? key, required this.width, required this.height, required this.image, required this.index, this.isLeft = true, this.lastIndex = 0}) : super(key: key);
+  const _WidgetHolder(
+      {Key? key,
+      required this.width,
+      required this.height,
+      required this.image,
+      required this.index,
+      this.isLeft = true,
+      this.lastIndex = 0})
+      : super(key: key);
 
   @override
   _WidgetHolderState createState() => _WidgetHolderState();
@@ -292,19 +340,28 @@ class _WidgetHolderState extends State<_WidgetHolder> {
   @override
   void initState() {
     super.initState();
-    childImage = Container(width: widget.width, height: widget.height, child: widget.image);
+    childImage = Container(
+        width: widget.width, height: widget.height, child: widget.image);
   }
 
   @override
   Widget build(BuildContext context) {
     TransformData transformData = context.watch<TransformData>();
     double spread = transformData.spreadRadians;
-    double finalRotation = (widget.index <= widget.lastIndex - 3) ? (3 * spread) : ((widget.lastIndex - widget.index) * spread);
+    double finalRotation = (widget.index <= widget.lastIndex - 3)
+        ? (3 * spread)
+        : ((widget.lastIndex - widget.index) * spread);
     bool isLeft = transformData.isLeftDrag;
     double scaleDifferential = 0.05 * transformData.transformDelta;
     return Transform.scale(
-      scale: isLeft ? (widget.isLeft ? (1 - scaleDifferential) : 1 + scaleDifferential) : (widget.isLeft ? 1 + scaleDifferential : (1 - scaleDifferential)),
-      child: Transform(alignment: Alignment.bottomCenter, transform: Matrix4.rotationZ(widget.isLeft ? -finalRotation : finalRotation), child: childImage),
+      scale: isLeft
+          ? (widget.isLeft ? (1 - scaleDifferential) : 1 + scaleDifferential)
+          : (widget.isLeft ? 1 + scaleDifferential : (1 - scaleDifferential)),
+      child: Transform(
+          alignment: Alignment.bottomCenter,
+          transform:
+              Matrix4.rotationZ(widget.isLeft ? -finalRotation : finalRotation),
+          child: childImage),
     );
   }
 }

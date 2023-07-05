@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:swipe_deck/swipe_deck.dart';
 
-const IMAGES = ["apex", "cod", "destiny", "fc3", "game_4", "ghost", "mk11", "nfs", "pubg", "mk112"];
+const IMAGES = [
+  "apex",
+  "cod",
+  "destiny",
+  "fc3",
+  "game_4",
+  "ghost",
+  "mk11",
+  "nfs",
+  "pubg",
+  "mk112"
+];
 final borderRadius = BorderRadius.circular(20.0);
 
 void main() {
@@ -39,14 +50,17 @@ class TestPage extends StatelessWidget {
                   child: Text("Nothing Here"),
                 ),
               ),
+              canReverse: true,
               cardSpreadInDegrees: 5, // Change the Spread of Background Cards
-              onSwipeLeft: (){
-                print("USER SWIPED LEFT -> GOING TO NEXT WIDGET");
+              onSwipeLeft: (swipeAmount, index) {
+                print(
+                    "USER SWIPED LEFT -> GOING TO NEXT WIDGET: $swipeAmount : index: $index");
               },
-              onSwipeRight: (){
-                print("USER SWIPED RIGHT -> GOING TO PREVIOUS WIDGET");
+              onSwipeRight: (swipeAmount, index) {
+                print(
+                    "USER SWIPED RIGHT -> GOING TO PREVIOUS WIDGET: $swipeAmount : index: $index");
               },
-              onChange: (index){
+              onChange: (index) {
                 print(IMAGES[index]);
               },
               widgets: IMAGES
