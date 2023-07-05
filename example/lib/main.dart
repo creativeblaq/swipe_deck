@@ -44,12 +44,13 @@ class TestPage extends StatelessWidget {
           width: 600,
           child: Center(
             child: SwipeDeck(
-              startIndex: 3,
+              startIndex: 0,
               emptyIndicator: Container(
                 child: Center(
                   child: Text("Nothing Here"),
                 ),
               ),
+              swipeDirection: SwipeDirection.left,
               cardSpreadInDegrees: 5, // Change the Spread of Background Cards
               onSwipeLeft: (swipeAmount, index) {
                 print(

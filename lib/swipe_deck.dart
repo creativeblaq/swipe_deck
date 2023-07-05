@@ -62,12 +62,20 @@ class _SwipeDeckState extends State<SwipeDeck> {
 
     spreadInRadians = widget.cardSpreadInDegrees.clamp(2.0, 10.0) * (PI / 180);
 
-    leftStackRaw = widget.widgets.sublist(widget.startIndex);
-    rightStackRaw = widget.widgets.sublist(0, widget.startIndex);
-
-    currentWidget = leftStackRaw.first;
-    leftStackRaw.removeAt(0);
-    contestantImage = leftStackRaw.first;
+    if (widget.swipeDirection == SwipeDirection.both ||
+        widget.swipeDirection == SwipeDirection.right) {
+      leftStackRaw = widget.widgets.sublist(widget.startIndex);
+      rightStackRaw = widget.widgets.sublist(0, widget.startIndex);
+      currentWidget = leftStackRaw.first;
+      leftStackRaw.removeAt(0);
+      contestantImage = leftStackRaw.first;
+    } else {
+      rightStackRaw = widget.widgets.sublist(widget.startIndex);
+      leftStackRaw = widget.widgets.sublist(0, widget.startIndex);
+      currentWidget = rightStackRaw.first;
+      rightStackRaw.removeAt(0);
+      contestantImage = rightStackRaw.first;
+    }
 
     leftStack = leftStackRaw.asMap().entries.toList();
     rightStack = rightStackRaw.asMap().entries.toList();
