@@ -238,7 +238,10 @@ class _SwipeDeckState extends State<SwipeDeck> {
                 rightStackRaw.add(currentWidget!);
                 currentWidget = leftStackRaw.first;
                 if (widget.loop) {
-                  leftStackRaw = [leftStackRaw.last, ...leftStackRaw];
+                  leftStackRaw = [
+                    ...leftStackRaw,
+                    rightStackRaw.last,
+                  ];
                 }
                 leftStackRaw.removeAt(0);
 

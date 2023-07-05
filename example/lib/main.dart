@@ -50,7 +50,7 @@ class TestPage extends StatelessWidget {
                   child: Text("Nothing Here"),
                 ),
               ),
-              swipeDirection: SwipeDirection.left,
+              swipeDirection: SwipeDirection.right,
               loop: true,
               cardSpreadInDegrees: 5, // Change the Spread of Background Cards
               onSwipeLeft: (swipeAmount, index) {
@@ -62,7 +62,7 @@ class TestPage extends StatelessWidget {
                     "USER SWIPED RIGHT -> GOING TO PREVIOUS WIDGET: $swipeAmount : index: $index");
               },
               onChange: (index) {
-                print(IMAGES[index]);
+                //print(IMAGES[index]);
               },
               widgets: IMAGES
                   .map((e) => GestureDetector(
